@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifePort</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #191F28;
+            --secondary: #8B95A1;
+            --blue: #3182F6;
+            --red: #E94658; /* Danger Color */
+            --green: #29CC6A; /* Safe Color */
+            --bg: #F2F4F6;
+            --white: #FFFFFF;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, "Noto Sans KR", sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--primary);
+        }
+
+        /* Mobile Container */
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            max-height: 850px;
+            background-color: var(--white);
+            position: relative;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        /* Common Padding */
+        .padding-layout {
+            padding: 24px;
+        }
+
+        /* Screen 1: Intro */
+        #screen-intro {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+        .intro-title { font-size: 28px; font-weight: 800; line-height: 1.4; margin-bottom: 10px; }
+        .intro-desc { font-size: 16px; color: var(--secondary); margin-bottom: 40px; }
+        .logo-area { font-size: 60px; margin-bottom: 30px; animation: bounce 2s infinite; }
+
+        /* Screen 2: Loading (Connection Simulation) */
+        #screen-loading {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255,255,255,0.95);
+        }
+        .loader {
+            width: 50px; height: 50px;
+            border: 5px solid #eee; border-top: 5px solid var(--blue);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 30px;
+        }
+        .loading-text { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .loading-sub { font-size: 14px; color: var(--secondary); }
+        
+        .connection-list { width: 80%; margin-top: 30px; text-align: left; }
+        .connect-item { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; color: #aaa; transition: 0.3s; }
+        .connect-item.active { color: var(--primary); font-weight: 600; }
+        .connect-item i { margin-right: 10px; width: 20px; text-align: center; }
+        .check-icon { color: var(--blue); opacity: 0; transform: scale(0.5); transition: 0.3s; }
+        .connect-item.done .check-icon { opacity: 1; transform: scale(1); }
+
+        /* Screen 3: Result */
+        #screen-result { display: none; padding-top: 40px; padding-bottom: 40px; }
+        
+        .result-header { text-align: center; margin-bottom: 40px; }
+        .result-badge { 
+            background: #FFF0F1; color: var(--red); 
+            padding: 6px 12px; border-radius: 20px; 
+            font-size: 13px; font-weight: 700; display: inline-block; margin-bottom: 15px;
+        }
+        .death-msg { font-size: 26px; font-weight: 800; line-height: 1.3; }
+        .highlight-red { color: var(--red); text-decoration: underline; text-decoration-color: rgba(233, 70, 88, 0.3); }
+
+        /* Graphs */
+        .graph-box { margin-bottom: 40px; }
+        .graph-row { margin-bottom: 20px; }
+        .graph-label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555; }
+        .bar-bg { width: 100%; height: 16px; background: #eee; border-radius: 8px; overflow: hidden; position: relative; }
+        .bar-fill { height: 100%; transition: width 1s cubic-bezier(0.25, 1, 0.5, 1); }
+        .fill-life { width: 100%; background: #ddd; }
+        .fill-money { width: 0%; background: var(--red); position: relative;}
+        
+        /* Tooltip on bar */
+        .money-tooltip {
+            position: absolute; right: 0; top: -30px;
+            background: var(--primary); color: white;
+            padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold;
+            transform: translateX(50%);
+        }
+        .money-tooltip::after {
+            content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+            border-top: 4px solid var(--primary); border-left: 4px solid transparent; border-right: 4px solid transparent;
+        }
+
+        /* Simulator Card */
+        .sim-card {
+            background: #F9FAFB; border-radius: 16px; padding: 20px;
+            border: 1px solid #eee;
+        }
+        .sim-title { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+        .sim-desc { font-size: 13px; color: var(--secondary); margin-bottom: 20px; }
+        
+        .range-wrap { position: relative; padding: 10px 0; }
+        input[type=range] {
+            width: 100%; -webkit-appearance: none; background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+            background: var(--blue); cursor: pointer; margin-top: -10px; box-shadow: 0 2px 6px rgba(49, 130, 246, 0.4);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #ddd; border-radius: 2px;
+        }
+        
+        .save-display {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 15px;
+        }
+        .save-amount { font-size: 18px; font-weight: 800; color: var(--blue); }
+
+        /* Button */
+        .btn-main {
+            width: 100%; padding: 18px; border-radius: 14px; border: none;
+            background-color: var(--blue); color: white; font-size: 17px; font-weight: 700;
+            cursor: pointer; transition: 0.2s; margin-top: 20px;
+        }
+        .btn-main:active { transform: scale(0.98); }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- 1. Intro Screen -->
+        <div id="screen-intro" class="padding-layout">
+            <div class="logo-area">🪙⏳</div>
+            <div class="intro-title">당신의 돈은<br>언제 죽을까요?</div>
+            <p class="intro-desc">카드 내역과 국민연금을 분석해<br>금융 수명을 예측해 드립니다.</p>
+            <button class="btn-main" onclick="startProcess()">내 데이터 불러오기</button>
+        </div>
+
+        <!-- 2. Loading Screen (Mock Connection) -->
+        <div id="screen-loading">
+            <div class="loader"></div>
+            <div class="loading-text" id="load-msg">서버 연결 중...</div>
+            <div class="loading-sub">잠시만 기다려주세요</div>
+
+            <div class="connection-list">
+                <div class="connect-item" id="step1"><i class="fas fa-check-circle check-icon"></i> 🏦 은행/계좌 잔액 조회</div>
+                <div class="connect-item" id="step2"><i class="fas fa-check-circle check-icon"></i> 💳 카드 3년치 소비 패턴 분석</div>
+                <div class="connect-item" id="step3"><i class="fas fa-check-circle check-icon"></i> 🏥 건강검진 의료비 예측</div>
+                <div class="connect-item" id="step4"><i class="fas fa-check-circle check-icon"></i> 📊 100세 생존율 시뮬레이션</div>
+            </div>
+        </div>
+
+        <!-- 3. Result Screen -->
+        <div id="screen-result" class="padding-layout">
+            <div class="result-header">
+                <span class="result-badge">🚨 경고</span>
+                <div class="death-msg">
+                    사용자님의 돈은<br>
+                    <span class="highlight-red">78세</span>에 사망합니다.
+                </div>
+                <p style="color:#666; font-size:14px; margin-top:10px;">신체 수명(100세)보다 <span style="font-weight:bold; color:var(--red)">22년</span> 부족해요.</p>
+            </div>
+
+            <div class="graph-box">
+                <!-- Life Graph -->
+                <div class="graph-row">
+                    <div class="graph-label"><span>🧘 내 수명</span><span>100세</span></div>
+                    <div class="bar-bg"><div class="bar-fill fill-life"></div></div>
+                </div>
+                <!-- Money Graph -->
+                <div class="graph-row">
+                    <div class="graph-label"><span>💸 돈의 수명</span><span id="money-age-text" style="color:var(--red)">78세</span></div>
+                    <div class="bar-bg">
+                        <div class="bar-fill fill-money" id="money-bar" style="width: 0%;">
+                            <div class="money-tooltip" id="money-tooltip">파산</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation -->
+            <div class="sim-card">
+                <div class="sim-title">🧪 생존 시뮬레이터</div>
+                <div class="sim-desc">월 지출을 조금만 줄여도 수명이 늘어납니다.</div>
+                
+                <div class="range-wrap">
+                    <input type="range" min="0" max="100" value="0" step="5" oninput="updateSimulation(this.value)">
+                </div>
+                
+                <div class="save-display">
+                    <span style="font-size:14px; color:#555;">월 지출 줄이기</span>
+                    <span class="save-amount" id="save-display-text">-0만원</span>
+                </div>
+            </div>
+
+            <div style="background: #E8F3FF; padding: 15px; border-radius: 12px; margin-top: 20px; font-size: 13px; color: #1B64DA; line-height: 1.5;">
+                <strong>💡 AI의 조언</strong><br>
+                매달 커피값과 택시비만 줄여서 <span id="advice-amount" style="font-weight:bold;">15만원</span>만 저축해도 금융 수명이 <span id="advice-year" style="font-weight:bold;">3년</span> 늘어납니다.
+            </div>
+
+            <button class="btn-main" onclick="alert('실제 앱에서는 맞춤형 연금 상품 페이지로 이동합니다.')">솔루션 자세히 보기</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Simulation Logic Variables
+        const initialMoneyLife = 78;
+        const maxLife = 100;
+        
+        function startProcess() {
+            // Screen Switch
+            document.getElementById('screen-intro').style.display = 'none';
+            document.getElementById('screen-loading').style.display = 'flex';
+
+            // Fake Loading Sequence
+            simulateConnectionStep(1, "은행 데이터 가져오는 중...", 800);
+            simulateConnectionStep(2, "카드 소비내역 분류 중...", 1800);
+            simulateConnectionStep(3, "미래 의료비 계산 중...", 2800);
+            simulateConnectionStep(4, "결과 분석 완료!", 3800);
+
+            // Go to Result
+            setTimeout(() => {
+                document.getElementById('screen-loading').style.display = 'none';
+                document.getElementById('screen-result').style.display = 'block';
+                
+                // Animation trigger
+                setTimeout(() => {
+                    updateGraph(initialMoneyLife);
+                }, 300);
+            }, 4500);
+        }
+
+        function simulateConnectionStep(stepNum, text, time) {
+            setTimeout(() => {
+                document.getElementById('load-msg').innerText = text;
+                const item = document.getElementById('step' + stepNum);
+                item.classList.add('active');
+                item.classList.add('done');
+            }, time);
+        }
+
+        function updateSimulation(val) {
+            const savingAmount = parseInt(val);
+            document.getElementById('save-display-text').innerText = "-" + savingAmount + "만원";
+            document.getElementById('advice-amount').innerText = (savingAmount + 15) + "만원"; // Dynamic text
+
+            // Simple Logic: 5만원 아낄때마다 1년 수명 연장 (가정)
+            // 0만원 -> 78세
+            // 100만원 -> 98세 (최대)
+            let extendedYears = Math.floor(savingAmount / 5); 
+            let newLife = initialMoneyLife + extendedYears;
+            
+            if(newLife > 100) newLife = 100;
+
+            updateGraph(newLife);
+            
+            // Text Update
+            document.getElementById('advice-year').innerText = (3 + Math.floor(savingAmount/10)) + "년";
+        }
+
+        function updateGraph(age) {
+            const bar = document.getElementById('money-bar');
+            const text = document.getElementById('money-age-text');
+            
+            bar.style.width = age + "%";
+            text.innerText = age + "세";
+            
+            // Change Color if safe
+            if(age >= 95) {
+                bar.style.background = "var(--green)";
+                text.style.color = "var(--green)";
+                document.getElementById('money-tooltip').innerText = "안전";
+                document.getElementById('money-tooltip').style.background = "var(--green)";
+            } else {
+                bar.style.background = "var(--red)";
+                text.style.color = "var(--red)";
+                document.getElementById('money-tooltip').innerText = "파산";
+                document.getElementById('money-tooltip').style.background = "var(--primary)";
+            }
+        }
+    </script>
+</body>
+</html>
