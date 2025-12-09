@@ -10,70 +10,49 @@
             --primary: #191F28;
             --secondary: #8B95A1;
             --blue: #3182F6;
-            --red: #E94658; /* Danger Color */
-            --green: #29CC6A; /* Safe Color */
+            --red: #E94658;
+            --orange: #FF8D4D;
+            --green: #29CC6A;
             --bg: #F2F4F6;
             --white: #FFFFFF;
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, "Noto Sans KR", sans-serif;
             background-color: var(--bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: var(--primary);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--primary);
+            overscroll-behavior-y: none;
         }
 
-        /* Mobile Container */
         .app-container {
-            width: 100%;
-            max-width: 400px;
-            height: 100vh;
-            max-height: 850px;
-            background-color: var(--white);
-            position: relative;
-            overflow-y: auto;
+            width: 100%; max-width: 400px; height: 100vh; max-height: 850px;
+            background-color: var(--white); position: relative; overflow-y: auto;
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* Common Padding */
-        .padding-layout {
-            padding: 24px;
-        }
+        .padding-layout { padding: 24px; }
 
-        /* Screen 1: Intro */
+        /* --- SCREEN 1: INTRO --- */
         #screen-intro {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            text-align: center;
+            height: 100%; display: flex; flex-direction: column; justify-content: center; text-align: center;
         }
         .intro-title { font-size: 28px; font-weight: 800; line-height: 1.4; margin-bottom: 10px; }
         .intro-desc { font-size: 16px; color: var(--secondary); margin-bottom: 40px; }
         .logo-area { font-size: 60px; margin-bottom: 30px; animation: bounce 2s infinite; }
 
-        /* Screen 2: Loading (Connection Simulation) */
+        /* --- SCREEN 2: LOADING --- */
         #screen-loading {
-            display: none;
-            height: 100%;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            display: none; height: 100%; flex-direction: column; justify-content: center; align-items: center;
             background-color: rgba(255,255,255,0.95);
         }
         .loader {
-            width: 50px; height: 50px;
-            border: 5px solid #eee; border-top: 5px solid var(--blue);
+            width: 50px; height: 50px; border: 5px solid #eee; border-top: 5px solid var(--blue);
             border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 30px;
         }
         .loading-text { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
         .loading-sub { font-size: 14px; color: var(--secondary); }
-        
         .connection-list { width: 80%; margin-top: 30px; text-align: left; }
         .connect-item { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; color: #aaa; transition: 0.3s; }
         .connect-item.active { color: var(--primary); font-weight: 600; }
@@ -81,72 +60,102 @@
         .check-icon { color: var(--blue); opacity: 0; transform: scale(0.5); transition: 0.3s; }
         .connect-item.done .check-icon { opacity: 1; transform: scale(1); }
 
-        /* Screen 3: Result */
-        #screen-result { display: none; padding-top: 40px; padding-bottom: 40px; }
-        
-        .result-header { text-align: center; margin-bottom: 40px; }
+        /* --- SCREEN 3: RESULT --- */
+        #screen-result { display: none; padding-bottom: 40px; }
+
+        /* 상단 고정 영역 (Sticky Header) */
+        .sticky-wrapper {
+            position: sticky;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.98);
+            z-index: 999;
+            padding-top: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+
+        /* Header & Graph */
+        .result-header { text-align: center; margin-bottom: 20px; padding: 0 24px;}
         .result-badge { 
-            background: #FFF0F1; color: var(--red); 
-            padding: 6px 12px; border-radius: 20px; 
-            font-size: 13px; font-weight: 700; display: inline-block; margin-bottom: 15px;
+            background: #FFF0F1; color: var(--red); padding: 6px 12px; border-radius: 20px; 
+            font-size: 13px; font-weight: 700; display: inline-block; margin-bottom: 10px;
         }
         .death-msg { font-size: 26px; font-weight: 800; line-height: 1.3; }
-        .highlight-red { color: var(--red); text-decoration: underline; text-decoration-color: rgba(233, 70, 88, 0.3); }
+        .highlight-red { color: var(--red); }
+        .highlight-orange { color: var(--orange); }
+        .highlight-green { color: var(--green); }
 
-        /* Graphs */
-        .graph-box { margin-bottom: 40px; }
-        .graph-row { margin-bottom: 20px; }
+        .graph-box { margin-bottom: 5px; padding: 0 24px; }
+        .graph-row { margin-bottom: 10px; }
         .graph-label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555; }
         .bar-bg { width: 100%; height: 16px; background: #eee; border-radius: 8px; overflow: hidden; position: relative; }
-        .bar-fill { height: 100%; transition: width 1s cubic-bezier(0.25, 1, 0.5, 1); }
+        .bar-fill { height: 100%; transition: width 0.3s ease-out; }
         .fill-life { width: 100%; background: #ddd; }
-        .fill-money { width: 0%; background: var(--red); position: relative;}
-        
-        /* Tooltip on bar */
-        .money-tooltip {
-            position: absolute; right: 0; top: -30px;
-            background: var(--primary); color: white;
-            padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold;
-            transform: translateX(50%);
-        }
-        .money-tooltip::after {
-            content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
-            border-top: 4px solid var(--primary); border-left: 4px solid transparent; border-right: 4px solid transparent;
-        }
+        .fill-money { width: 0%; background: var(--red); }
 
-        /* Simulator Card */
-        .sim-card {
-            background: #F9FAFB; border-radius: 16px; padding: 20px;
-            border: 1px solid #eee;
-        }
-        .sim-title { font-size: 16px; font-weight: 700; margin-bottom: 5px; }
-        .sim-desc { font-size: 13px; color: var(--secondary); margin-bottom: 20px; }
+        /* Risk Section */
+        .risk-section { border-top: 8px solid #F2F4F6; padding: 24px; margin-top: 0; }
+        .section-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; }
+        .section-title i { color: var(--orange); margin-right: 8px; }
         
-        .range-wrap { position: relative; padding: 10px 0; }
-        input[type=range] {
-            width: 100%; -webkit-appearance: none; background: transparent; 
+        .risk-card {
+            background: white; border: 1px solid #eee; border-radius: 16px; padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px;
         }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
-            background: var(--blue); cursor: pointer; margin-top: -10px; box-shadow: 0 2px 6px rgba(49, 130, 246, 0.4);
+        .risk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .risk-prob { font-size: 12px; color: var(--secondary); background: #f5f5f5; padding: 4px 8px; border-radius: 6px; display:inline-block; margin-bottom:10px;}
+        .risk-name { font-size: 16px; font-weight: 700; }
+        
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider-toggle:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider-toggle { background-color: var(--orange); }
+        input:checked + .slider-toggle:before { transform: translateX(20px); }
+
+        /* Savings Solution Section */
+        .solution-section { border-top: 8px solid #F2F4F6; padding: 24px; background: #F9FAFB; }
+        .sim-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .sim-title { font-size: 16px; font-weight: 700; margin-bottom: 5px; color: var(--blue); }
+        
+        .range-wrap { position: relative; padding: 15px 0; }
+        
+        /* [수정 완료] 슬라이더 스타일 & 터치 설정 복구 */
+        input[type=range] { 
+            width: 100%; 
+            accent-color: var(--blue);
+            cursor: pointer;
+            touch-action: none; /* 드래그 시 스크롤 막기 */
+            -webkit-appearance: none; /* 기본 스타일 제거 */
+            background: transparent;
         }
+        
+        /* 트랙 스타일 */
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px; cursor: pointer; background: #ddd; border-radius: 2px;
+            width: 100%; height: 6px; background: #E5E8EB; border-radius: 3px;
+        }
+
+        /* 손잡이(파란 동그라미) 디자인 복구 */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 28px; width: 28px; /* 터치하기 좋게 살짝 키움 */
+            border-radius: 50%;
+            background: var(--blue); /* 파란색 복구 */
+            margin-top: -11px; /* 트랙 중앙 정렬 */
+            box-shadow: 0 2px 6px rgba(49, 130, 246, 0.4); /* 그림자 복구 */
         }
         
-        .save-display {
-            display: flex; justify-content: space-between; align-items: center; margin-top: 15px;
-        }
-        .save-amount { font-size: 18px; font-weight: 800; color: var(--blue); }
+        .save-display { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .save-amount { font-size: 20px; font-weight: 800; color: var(--blue); }
 
-        /* Button */
+        /* Buttons & Animations */
         .btn-main {
             width: 100%; padding: 18px; border-radius: 14px; border: none;
             background-color: var(--blue); color: white; font-size: 17px; font-weight: 700;
             cursor: pointer; transition: 0.2s; margin-top: 20px;
         }
-        .btn-main:active { transform: scale(0.98); }
-
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
@@ -156,107 +165,134 @@
 
     <div class="app-container">
         
-        <!-- 1. Intro Screen -->
+        <!-- 1. INTRO SCREEN -->
         <div id="screen-intro" class="padding-layout">
             <div class="logo-area">🪙⏳</div>
             <div class="intro-title">당신의 돈은<br>언제 죽을까요?</div>
-            <p class="intro-desc">카드 내역과 국민연금을 분석해<br>금융 수명을 예측해 드립니다.</p>
+            <p class="intro-desc">카드 내역과 위험 확률을 분석해<br>금융 수명을 예측해 드립니다.</p>
             <button class="btn-main" onclick="startProcess()">내 데이터 불러오기</button>
         </div>
 
-        <!-- 2. Loading Screen (Mock Connection) -->
+        <!-- 2. LOADING SCREEN -->
         <div id="screen-loading">
             <div class="loader"></div>
             <div class="loading-text" id="load-msg">서버 연결 중...</div>
             <div class="loading-sub">잠시만 기다려주세요</div>
-
             <div class="connection-list">
                 <div class="connect-item" id="step1"><i class="fas fa-check-circle check-icon"></i> 🏦 은행/계좌 잔액 조회</div>
                 <div class="connect-item" id="step2"><i class="fas fa-check-circle check-icon"></i> 💳 카드 3년치 소비 패턴 분석</div>
                 <div class="connect-item" id="step3"><i class="fas fa-check-circle check-icon"></i> 🏥 건강검진 의료비 예측</div>
-                <div class="connect-item" id="step4"><i class="fas fa-check-circle check-icon"></i> 📊 100세 생존율 시뮬레이션</div>
+                <div class="connect-item" id="step4"><i class="fas fa-check-circle check-icon"></i> 📊 리스크 모델링 중...</div>
             </div>
         </div>
 
-        <!-- 3. Result Screen -->
-        <div id="screen-result" class="padding-layout">
-            <div class="result-header">
-                <span class="result-badge">🚨 경고</span>
-                <div class="death-msg">
-                    사용자님의 돈은<br>
-                    <span class="highlight-red">78세</span>에 사망합니다.
-                </div>
-                <p style="color:#666; font-size:14px; margin-top:10px;">신체 수명(100세)보다 <span style="font-weight:bold; color:var(--red)">22년</span> 부족해요.</p>
-            </div>
-
-            <div class="graph-box">
-                <!-- Life Graph -->
-                <div class="graph-row">
-                    <div class="graph-label"><span>🧘 내 수명</span><span>100세</span></div>
-                    <div class="bar-bg"><div class="bar-fill fill-life"></div></div>
-                </div>
-                <!-- Money Graph -->
-                <div class="graph-row">
-                    <div class="graph-label"><span>💸 돈의 수명</span><span id="money-age-text" style="color:var(--red)">78세</span></div>
-                    <div class="bar-bg">
-                        <div class="bar-fill fill-money" id="money-bar" style="width: 0%;">
-                            <div class="money-tooltip" id="money-tooltip">파산</div>
-                        </div>
+        <!-- 3. RESULT SCREEN -->
+        <div id="screen-result">
+            
+            <!-- Sticky Header -->
+            <div class="sticky-wrapper">
+                <div class="result-header">
+                    <span class="result-badge" id="badge-text">현재 상태</span>
+                    <div class="death-msg">
+                        당신의 돈은<br>
+                        <span class="highlight-red" id="age-display">78세</span>에 사망합니다.
                     </div>
                 </div>
-            </div>
 
-            <!-- Simulation -->
-            <div class="sim-card">
-                <div class="sim-title">🧪 생존 시뮬레이터</div>
-                <div class="sim-desc">월 지출을 조금만 줄여도 수명이 늘어납니다.</div>
-                
-                <div class="range-wrap">
-                    <input type="range" min="0" max="100" value="0" step="5" oninput="updateSimulation(this.value)">
-                </div>
-                
-                <div class="save-display">
-                    <span style="font-size:14px; color:#555;">월 지출 줄이기</span>
-                    <span class="save-amount" id="save-display-text">-0만원</span>
+                <div class="graph-box">
+                    <div class="graph-row">
+                        <div class="graph-label"><span>💸 돈의 수명</span><span id="bar-text">78세</span></div>
+                        <div class="bar-bg">
+                            <div class="bar-fill fill-money" id="money-bar" style="width: 78%;"></div>
+                        </div>
+                    </div>
+                    <p style="text-align: center; color: #888; font-size: 13px; margin: 5px 0 0 0;">▲ 신체수명 100세 기준</p>
                 </div>
             </div>
 
-            <div style="background: #E8F3FF; padding: 15px; border-radius: 12px; margin-top: 20px; font-size: 13px; color: #1B64DA; line-height: 1.5;">
-                <strong>💡 AI의 조언</strong><br>
-                매달 커피값과 택시비만 줄여서 <span id="advice-amount" style="font-weight:bold;">15만원</span>만 저축해도 금융 수명이 <span id="advice-year" style="font-weight:bold;">3년</span> 늘어납니다.
+            <!-- Scrollable Content -->
+            <div class="risk-section">
+                <div class="section-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>라이프 리스크 (충격 예측)</span>
+                </div>
+                <p style="font-size: 13px; color: #666; margin-bottom: 20px;">
+                    "만약 이런 일이 생긴다면?"<br>스위치를 켜서 충격을 확인하세요.
+                </p>
+
+                <!-- Risk 1 -->
+                <div class="risk-card">
+                    <div class="risk-prob">⚠️ 위험도 24% 높음</div>
+                    <div class="risk-header">
+                        <span class="risk-name">🏥 중증 질환 발생</span>
+                        <label class="switch">
+                            <input type="checkbox" id="risk-medical" onchange="updateAll()">
+                            <span class="slider-toggle"></span>
+                        </label>
+                    </div>
+                    <div style="font-size:13px; color:#555;">예상 치료비 <b style="color:var(--red)">-6,000만원</b></div>
+                </div>
+
+                <!-- Risk 2 -->
+                <div class="risk-card">
+                    <div class="risk-prob">⚡️ 발생 확률 15%</div>
+                    <div class="risk-header">
+                        <span class="risk-name">💼 휴직 / 실직 사고</span>
+                        <label class="switch">
+                            <input type="checkbox" id="risk-job" onchange="updateAll()">
+                            <span class="slider-toggle"></span>
+                        </label>
+                    </div>
+                    <div style="font-size:13px; color:#555;">소득 중단 손실 <b style="color:var(--red)">-3,000만원</b></div>
+                </div>
             </div>
 
-            <button class="btn-main" onclick="alert('실제 앱에서는 맞춤형 연금 상품 페이지로 이동합니다.')">솔루션 자세히 보기</button>
+            <div class="solution-section">
+                <div class="section-title">
+                    <i class="fas fa-shield-alt" style="color:var(--blue)"></i>
+                    <span style="color:var(--primary)">솔루션 시뮬레이터</span>
+                </div>
+                
+                <div class="sim-card">
+                    <div class="sim-title">☕️ 월 지출을 줄인다면?</div>
+                    <div class="range-wrap">
+                        <!-- 복구된 파란 동그라미 슬라이더 -->
+                        <input type="range" id="saving-slider" min="0" max="100" value="0" step="1" oninput="updateAll()">
+                    </div>
+                    <div class="save-display">
+                        <span style="font-size:14px; color:#555;">저축액</span>
+                        <span class="save-amount" id="saving-text">-0만원</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; font-size:14px; text-align:center; color:#555;">
+                    <span id="final-advice">지금 상태는 <strong>주의</strong>가 필요합니다.</span>
+                </div>
+
+                <button class="btn-main" onclick="alert('맞춤형 연금/보험 상품 페이지로 이동합니다.')">솔루션 적용하기</button>
+            </div>
+
         </div>
 
     </div>
 
     <script>
-        // Simulation Logic Variables
-        const initialMoneyLife = 78;
-        const maxLife = 100;
-        
+        const initialLife = 78;
+
         function startProcess() {
-            // Screen Switch
             document.getElementById('screen-intro').style.display = 'none';
             document.getElementById('screen-loading').style.display = 'flex';
 
-            // Fake Loading Sequence
             simulateConnectionStep(1, "은행 데이터 가져오는 중...", 800);
-            simulateConnectionStep(2, "카드 소비내역 분류 중...", 1800);
-            simulateConnectionStep(3, "미래 의료비 계산 중...", 2800);
-            simulateConnectionStep(4, "결과 분석 완료!", 3800);
+            simulateConnectionStep(2, "카드 소비내역 분류 중...", 1600);
+            simulateConnectionStep(3, "미래 의료비 계산 중...", 2400);
+            simulateConnectionStep(4, "리스크 모델링 완료!", 3200);
 
-            // Go to Result
             setTimeout(() => {
                 document.getElementById('screen-loading').style.display = 'none';
                 document.getElementById('screen-result').style.display = 'block';
-                
-                // Animation trigger
-                setTimeout(() => {
-                    updateGraph(initialMoneyLife);
-                }, 300);
-            }, 4500);
+                updateAll();
+            }, 4000);
         }
 
         function simulateConnectionStep(stepNum, text, time) {
@@ -268,43 +304,56 @@
             }, time);
         }
 
-        function updateSimulation(val) {
-            const savingAmount = parseInt(val);
-            document.getElementById('save-display-text').innerText = "-" + savingAmount + "만원";
-            document.getElementById('advice-amount').innerText = (savingAmount + 15) + "만원"; // Dynamic text
+        function updateAll() {
+            const isMedicalRisk = document.getElementById('risk-medical').checked;
+            const isJobRisk = document.getElementById('risk-job').checked;
+            const savingAmount = parseInt(document.getElementById('saving-slider').value);
 
-            // Simple Logic: 5만원 아낄때마다 1년 수명 연장 (가정)
-            // 0만원 -> 78세
-            // 100만원 -> 98세 (최대)
-            let extendedYears = Math.floor(savingAmount / 5); 
-            let newLife = initialMoneyLife + extendedYears;
-            
-            if(newLife > 100) newLife = 100;
+            document.getElementById('saving-text').innerText = "-" + savingAmount + "만원";
 
-            updateGraph(newLife);
+            let finalLife = initialLife;
+            let riskPenalty = 0;
+            if (isMedicalRisk) riskPenalty += 7;
+            if (isJobRisk) riskPenalty += 3;
             
-            // Text Update
-            document.getElementById('advice-year').innerText = (3 + Math.floor(savingAmount/10)) + "년";
-        }
+            finalLife -= riskPenalty;
 
-        function updateGraph(age) {
-            const bar = document.getElementById('money-bar');
-            const text = document.getElementById('money-age-text');
-            
-            bar.style.width = age + "%";
-            text.innerText = age + "세";
-            
-            // Change Color if safe
-            if(age >= 95) {
-                bar.style.background = "var(--green)";
-                text.style.color = "var(--green)";
-                document.getElementById('money-tooltip').innerText = "안전";
-                document.getElementById('money-tooltip').style.background = "var(--green)";
+            let savingBonus = Math.floor(savingAmount / 5);
+            finalLife += savingBonus;
+
+            if (finalLife > 100) finalLife = 100;
+
+            const ageDisplay = document.getElementById('age-display');
+            const barText = document.getElementById('bar-text');
+            const moneyBar = document.getElementById('money-bar');
+            const badge = document.getElementById('badge-text');
+            const advice = document.getElementById('final-advice');
+
+            ageDisplay.innerText = finalLife + "세";
+            barText.innerText = finalLife + "세";
+            moneyBar.style.width = finalLife + "%";
+
+            if (finalLife >= 95) {
+                badge.innerText = "안전 상태";
+                badge.style.background = "#E6FCF0";
+                badge.style.color = "var(--green)";
+                ageDisplay.className = "highlight-green";
+                moneyBar.style.background = "var(--green)";
+                advice.innerHTML = "훌륭합니다! <strong style='color:var(--green)'>안정적인 노후</strong>가 예상됩니다.";
+            } else if (riskPenalty > 0 && savingBonus < riskPenalty) {
+                badge.innerText = "위험 경고";
+                badge.style.background = "#FFF4E6";
+                badge.style.color = "var(--orange)";
+                ageDisplay.className = "highlight-orange";
+                moneyBar.style.background = "var(--orange)";
+                advice.innerHTML = "리스크가 큽니다. <strong style='color:var(--orange)'>더 많은 저축</strong>이나 대비가 필요합니다.";
             } else {
-                bar.style.background = "var(--red)";
-                text.style.color = "var(--red)";
-                document.getElementById('money-tooltip').innerText = "파산";
-                document.getElementById('money-tooltip').style.background = "var(--primary)";
+                badge.innerText = "주의 필요";
+                badge.style.background = "#FFF0F1";
+                badge.style.color = "var(--red)";
+                ageDisplay.className = "highlight-red";
+                moneyBar.style.background = "var(--red)";
+                advice.innerHTML = "현재 추세라면 <strong style='color:var(--red)'>노후 자금이 부족</strong>합니다.";
             }
         }
     </script>
