@@ -3,416 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifePort</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>LifePort - 금융 수명 예측</title>
+    
+    <!-- React & ReactDOM (CDN) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel (JSX를 브라우저가 이해하도록 변환) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS (스타일링) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 폰트 설정 -->
     <style>
-        :root {
-            --primary: #191F28;
-            --secondary: #8B95A1;
-            --blue: #3182F6;
-            --red: #E94658;
-            --orange: #FF8D4D;
-            --green: #29CC6A;
-            --bg: #F2F4F6;
-            --white: #FFFFFF;
-        }
-
-        body {
-            margin: 0; padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, "Noto Sans KR", sans-serif;
-            background-color: var(--bg);
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; color: var(--primary);
-            overscroll-behavior-y: none;
-        }
-
-        .app-container {
-            width: 100%; max-width: 400px; height: 100vh; max-height: 850px;
-            background-color: var(--white); position: relative; overflow-y: auto;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .padding-layout { padding: 24px; }
-
-        /* --- SCREEN 1: INTRO --- */
-        #screen-intro {
-            height: 100%; display: flex; flex-direction: column; justify-content: center; text-align: center;
-        }
-        .intro-title { font-size: 28px; font-weight: 800; line-height: 1.4; margin-bottom: 10px; }
-        .intro-desc { font-size: 16px; color: var(--secondary); margin-bottom: 40px; }
-        .logo-area { font-size: 60px; margin-bottom: 30px; animation: bounce 2s infinite; }
-
-        /* --- SCREEN 2: LOADING --- */
-        #screen-loading {
-            display: none; height: 100%; flex-direction: column; justify-content: center; align-items: center;
-            background-color: rgba(255,255,255,0.95);
-        }
-        .loader {
-            width: 50px; height: 50px; border: 5px solid #eee; border-top: 5px solid var(--blue);
-            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 30px;
-        }
-        .loading-text { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-        .loading-sub { font-size: 14px; color: var(--secondary); }
-        .connection-list { width: 80%; margin-top: 30px; text-align: left; }
-        .connect-item { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; color: #aaa; transition: 0.3s; }
-        .connect-item.active { color: var(--primary); font-weight: 600; }
-        .connect-item i { margin-right: 10px; width: 20px; text-align: center; }
-        .check-icon { color: var(--blue); opacity: 0; transform: scale(0.5); transition: 0.3s; }
-        .connect-item.done .check-icon { opacity: 1; transform: scale(1); }
-
-        /* --- SCREEN 3: RESULT --- */
-        #screen-result { display: none; padding-bottom: 40px; }
-
-        /* Sticky Header */
-        .sticky-wrapper {
-            position: sticky;
-            top: 0;
-            background-color: rgba(255, 255, 255, 0.98);
-            z-index: 999;
-            padding-top: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        }
-
-        /* Result Header */
-        .result-header { text-align: center; margin-bottom: 20px; padding: 0 24px;}
-        .result-badge { 
-            background: #FFF0F1; color: var(--red); padding: 6px 12px; border-radius: 20px; 
-            font-size: 13px; font-weight: 700; display: inline-block; margin-bottom: 10px;
-        }
-        .death-msg { font-size: 26px; font-weight: 800; line-height: 1.3; }
-        .highlight-red { color: var(--red); }
-        .highlight-orange { color: var(--orange); }
-        .highlight-green { color: var(--green); }
-
-        /* Lifestyle Tabs (New Feature) */
-        .lifestyle-tabs {
-            display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; padding: 0 24px;
-        }
-        .tab-btn {
-            padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
-            border: 1px solid #eee; background: #fff; color: #888; cursor: pointer; transition: 0.2s;
-        }
-        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-        /* Graph */
-        .graph-box { margin-bottom: 5px; padding: 0 24px; }
-        .graph-row { margin-bottom: 10px; }
-        .graph-label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555; }
-        .bar-bg { width: 100%; height: 16px; background: #eee; border-radius: 8px; overflow: hidden; position: relative; }
-        .bar-fill { height: 100%; transition: width 0.3s ease-out; }
-        .fill-life { width: 100%; background: #ddd; }
-        .fill-money { width: 0%; background: var(--red); }
-
-        /* Diagnosis Details (New Feature) */
-        .diagnosis-grid {
-            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 24px; margin-top: 15px;
-        }
-        .diag-item { background: #F9FAFB; padding: 10px; border-radius: 10px; text-align: center; }
-        .diag-label { font-size: 11px; color: #888; margin-bottom: 4px; }
-        .diag-value { font-size: 14px; font-weight: 700; color: var(--primary); }
-        .diag-status { font-size: 10px; margin-top: 2px; }
-
-        /* Risk Section */
-        .risk-section { border-top: 8px solid #F2F4F6; padding: 24px; margin-top: 20px; }
-        .section-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; }
-        .section-title i { color: var(--orange); margin-right: 8px; }
-        
-        .risk-card {
-            background: white; border: 1px solid #eee; border-radius: 16px; padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 15px;
-        }
-        .risk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .risk-prob { font-size: 12px; color: var(--secondary); background: #f5f5f5; padding: 4px 8px; border-radius: 6px; display:inline-block; margin-bottom:10px;}
-        .risk-name { font-size: 16px; font-weight: 700; }
-        
-        /* Toggle Switch */
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider-toggle:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider-toggle { background-color: var(--orange); }
-        input:checked + .slider-toggle:before { transform: translateX(20px); }
-
-        /* Savings Solution Section */
-        .solution-section { border-top: 8px solid #F2F4F6; padding: 24px; background: #F9FAFB; }
-        .sim-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .sim-title { font-size: 16px; font-weight: 700; margin-bottom: 5px; color: var(--blue); }
-        
-        .range-wrap { position: relative; padding: 15px 0; }
-        
-        input[type=range] { 
-            width: 100%; 
-            accent-color: var(--blue);
-            cursor: pointer;
-            touch-action: none;
-            -webkit-appearance: none;
-            background: transparent;
-        }
-        
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 6px; background: #E5E8EB; border-radius: 3px;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 28px; width: 28px;
-            border-radius: 50%;
-            background: var(--blue);
-            margin-top: -11px;
-            box-shadow: 0 2px 6px rgba(49, 130, 246, 0.4);
-        }
-        
-        .save-display { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-        .save-amount { font-size: 20px; font-weight: 800; color: var(--blue); }
-
-        .btn-main {
-            width: 100%; padding: 18px; border-radius: 14px; border: none;
-            background-color: var(--blue); color: white; font-size: 17px; font-weight: 700;
-            cursor: pointer; transition: 0.2s; margin-top: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 </head>
-<body>
+<body class="bg-[#F2F4F6]">
+    <div id="root"></div>
 
-    <div class="app-container">
-        
-        <!-- 1. INTRO SCREEN -->
-        <div id="screen-intro" class="padding-layout">
-            <div class="logo-area">🪙⏳</div>
-            <div class="intro-title">당신의 돈은<br>언제 죽을까요?</div>
-            <p class="intro-desc">카드 내역과 위험 확률을 분석해<br>금융 수명을 예측해 드립니다.</p>
-            <button class="btn-main" onclick="startProcess()">내 데이터 불러오기</button>
-        </div>
+    <script type="text/babel">
+        // --- 아이콘 컴포넌트 (Lucide 아이콘을 SVG로 직접 구현) ---
+        const IconBase = ({ size = 24, color = "currentColor", children, ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+                {children}
+            </svg>
+        );
 
-        <!-- 2. LOADING SCREEN -->
-        <div id="screen-loading">
-            <div class="loader"></div>
-            <div class="loading-text" id="load-msg">서버 연결 중...</div>
-            <div class="loading-sub">잠시만 기다려주세요</div>
-            <div class="connection-list">
-                <div class="connect-item" id="step1"><i class="fas fa-check-circle check-icon"></i> 🏦 은행/계좌 잔액 조회</div>
-                <div class="connect-item" id="step2"><i class="fas fa-check-circle check-icon"></i> 💳 카드 3년치 소비 패턴 분석</div>
-                <div class="connect-item" id="step3"><i class="fas fa-check-circle check-icon"></i> 🏥 건강검진 의료비 예측</div>
-                <div class="connect-item" id="step4"><i class="fas fa-check-circle check-icon"></i> 📊 리스크 모델링 중...</div>
-            </div>
-        </div>
+        const User = (props) => <IconBase {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconBase>;
+        const CheckCircle = (props) => <IconBase {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>;
+        const AlertTriangle = (props) => <IconBase {...props}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>;
+        const Shield = (props) => <IconBase {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></IconBase>;
+        const RefreshCw = (props) => <IconBase {...props}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></IconBase>;
+        const TrendingUp = (props) => <IconBase {...props}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></IconBase>;
+        const Activity = (props) => <IconBase {...props}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></IconBase>;
+        const CreditCard = (props) => <IconBase {...props}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></IconBase>;
+        const Landmark = (props) => <IconBase {...props}><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></IconBase>;
 
-        <!-- 3. RESULT SCREEN -->
-        <div id="screen-result">
-            
-            <!-- Sticky Header -->
-            <div class="sticky-wrapper">
-                <div class="result-header">
-                    <span class="result-badge" id="badge-text">현재 상태</span>
-                    <div class="death-msg">
-                        당신의 돈은<br>
-                        <span class="highlight-red" id="age-display">78세</span>에 사망합니다.
-                    </div>
-                </div>
+        // --- 메인 애플리케이션 ---
+        const LifePortSimulator = () => {
+            const [screen, setScreen] = React.useState('intro');
+            const [loadingStep, setLoadingStep] = React.useState(0);
+            const [profile, setProfile] = React.useState(null);
+            const [simulationResult, setSimulationResult] = React.useState(null);
 
-                <!-- Lifestyle Tabs (New) -->
-                <div class="lifestyle-tabs">
-                    <button class="tab-btn" onclick="setLifestyle('basic')" id="tab-basic">기본 생활</button>
-                    <button class="tab-btn active" onclick="setLifestyle('standard')" id="tab-standard">보통 생활</button>
-                    <button class="tab-btn" onclick="setLifestyle('rich')" id="tab-rich">여유 생활</button>
-                </div>
+            const [lifestyle, setLifestyle] = React.useState('standard'); 
+            const [activeRisks, setActiveRisks] = React.useState({}); 
+            const [savings, setSavings] = React.useState(0); 
 
-                <!-- Graph -->
-                <div class="graph-box">
-                    <div class="graph-row">
-                        <div class="graph-label"><span>💸 돈의 수명</span><span id="bar-text">78세</span></div>
-                        <div class="bar-bg">
-                            <div class="bar-fill fill-money" id="money-bar" style="width: 78%;"></div>
-                        </div>
-                    </div>
-                    <p style="text-align: center; color: #888; font-size: 12px; margin: 5px 0 0 0;">▲ 기대수명 100세 기준</p>
-                </div>
+            // 데이터 정의
+            const jobs = [
+                { title: '대기업 대리', minIncome: 350, maxIncome: 550, style: 'stable' },
+                { title: '프리랜서 개발자', minIncome: 300, maxIncome: 800, style: 'volatile' },
+                { title: '9급 공무원', minIncome: 200, maxIncome: 280, style: 'stable' },
+                { title: '스타트업 대표', minIncome: 200, maxIncome: 1200, style: 'high-risk' },
+                { title: '편의점 점주', minIncome: 250, maxIncome: 450, style: 'business' },
+                { title: '전문직 (약사)', minIncome: 600, maxIncome: 1000, style: 'professional' },
+                { title: '중소기업 사원', minIncome: 230, maxIncome: 340, style: 'average' },
+            ];
 
-                <!-- Diagnosis Details (New) -->
-                <div class="diagnosis-grid">
-                    <div class="diag-item">
-                        <div class="diag-label">저축률</div>
-                        <div class="diag-value" style="color:var(--orange)">12%</div>
-                        <div class="diag-status" style="color:var(--orange)">부족</div>
-                    </div>
-                    <div class="diag-item">
-                        <div class="diag-label">DSR(부채)</div>
-                        <div class="diag-value" style="color:var(--green)">25%</div>
-                        <div class="diag-status" style="color:var(--green)">양호</div>
-                    </div>
-                    <div class="diag-item">
-                        <div class="diag-label">비상금 여력</div>
-                        <div class="diag-value" style="color:var(--red)">0.8개월</div>
-                        <div class="diag-status" style="color:var(--red)">위험</div>
-                    </div>
-                </div>
-            </div>
+            const spendingHabits = [
+                { type: '짠테크 고수', ratio: 0.35, desc: '저축률 65%' },
+                { type: '합리적 소비', ratio: 0.55, desc: '저축률 45%' },
+                { type: '욜로(YOLO)족', ratio: 0.95, desc: '저축률 5%' },
+                { type: '기분파', ratio: 0.75, desc: '저축률 25%' },
+                { type: '미니멀리스트', ratio: 0.45, desc: '저축률 55%' },
+            ];
 
-            <!-- Scrollable Content -->
-            <div class="risk-section">
-                <div class="section-title">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>라이프 리스크 (충격 예측)</span>
-                </div>
-                <p style="font-size: 13px; color: #666; margin-bottom: 20px;">
-                    "만약 이런 일이 생긴다면?"<br>스위치를 켜서 충격을 확인하세요.
-                </p>
+            const riskScenarios = {
+                20: [
+                    { id: 'marriage', title: '💍 결혼 및 독립 자금', desc: '주거 마련 및 혼수 비용', loss: 8000, prob: '70%' }, 
+                    { id: 'car', title: '🚗 차량 구매 비용', desc: '할부금 및 유지보수비', loss: 3000, prob: '60%' } 
+                ],
+                30: [
+                    { id: 'housing', title: '🏠 주택 대출 이자 상승', desc: '대출 원리금 상환 부담', loss: 10000, prob: '50%' }, 
+                    { id: 'child', title: '👶 육아 휴직/소득 감소', desc: '경력 단절로 인한 손실', loss: 4000, prob: '40%' }
+                ],
+                40: [
+                    { id: 'education', title: '🎓 자녀 교육비 지출', desc: '대학 진학까지 누적 비용', loss: 12000, prob: '80%' }, 
+                    { id: 'medical', title: '🏥 고액 의료비 발생', desc: '가족 수술 및 입원비', loss: 5000, prob: '24%' }
+                ],
+                50: [
+                    { id: 'business_fail', title: '📉 투자 및 사업 손실', desc: '노후 자금 손실', loss: 15000, prob: '30%' }, 
+                    { id: 'job_loss', title: '💼 조기 퇴직 및 실직', desc: '예상보다 빠른 소득 중단', loss: 5000, prob: '15%' }
+                ],
+                60: [
+                    { id: 'medical_major', title: '🏥 노후 의료비 폭탄', desc: '장기 요양 및 간병비', loss: 8000, prob: '35%' },
+                    { id: 'scam', title: '💸 금융 사기/손실', desc: '자산 관리 실패', loss: 10000, prob: '15%' }
+                ]
+            };
 
-                <div class="risk-card">
-                    <div class="risk-prob">⚠️ 위험도 24% 높음</div>
-                    <div class="risk-header">
-                        <span class="risk-name">🏥 중증 질환 발생</span>
-                        <label class="switch">
-                            <input type="checkbox" id="risk-medical" onchange="updateAll()">
-                            <span class="slider-toggle"></span>
-                        </label>
-                    </div>
-                    <div style="font-size:13px; color:#555;">예상 치료비 <b style="color:var(--red)">-6,000만원</b></div>
-                </div>
+            const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+            const formatMoney = (amount) => amount >= 10000 ? (amount / 10000).toFixed(1).replace('.0', '') + '억' : amount.toLocaleString() + '만원';
 
-                <div class="risk-card">
-                    <div class="risk-prob">⚡️ 발생 확률 15%</div>
-                    <div class="risk-header">
-                        <span class="risk-name">💼 휴직 / 실직 사고</span>
-                        <label class="switch">
-                            <input type="checkbox" id="risk-job" onchange="updateAll()">
-                            <span class="slider-toggle"></span>
-                        </label>
-                    </div>
-                    <div style="font-size:13px; color:#555;">소득 중단 손실 <b style="color:var(--red)">-3,000만원</b></div>
-                </div>
-            </div>
-
-            <div class="solution-section">
-                <div class="section-title">
-                    <i class="fas fa-shield-alt" style="color:var(--blue)"></i>
-                    <span style="color:var(--primary)">솔루션 시뮬레이터</span>
-                </div>
+            const generateProfile = () => {
+                const age = rand(26, 45); 
+                const job = jobs[rand(0, jobs.length - 1)];
+                const habit = spendingHabits[rand(0, spendingHabits.length - 1)];
                 
-                <div class="sim-card">
-                    <div class="sim-title">☕️ 월 지출을 줄인다면?</div>
-                    <div class="range-wrap">
-                        <input type="range" id="saving-slider" min="0" max="100" value="0" step="1" oninput="updateAll()">
-                    </div>
-                    <div class="save-display">
-                        <span style="font-size:14px; color:#555;">저축액</span>
-                        <span class="save-amount" id="saving-text">-0만원</span>
+                let monthlyIncome = rand(job.minIncome, job.maxIncome);
+                if (age > 35 && job.style !== 'beginner') monthlyIncome += rand(50, 150);
+                
+                const baseMonthlyExpense = Math.floor(monthlyIncome * habit.ratio);
+                const yearsWorked = Math.max(0, age - 26);
+                const annualSaving = (monthlyIncome - baseMonthlyExpense) * 12;
+                
+                let totalAssets = Math.floor(annualSaving * yearsWorked * rand(6, 9) / 10) + rand(200, 1500); 
+                let debt = Math.floor(totalAssets * (rand(10, 50) / 100));
+                let netAssets = Math.floor(totalAssets - debt);
+
+                let ageKey = Math.floor(age / 10) * 10;
+                if (ageKey > 60) ageKey = 60;
+                if (ageKey < 20) ageKey = 20;
+                const assignedRisks = riskScenarios[ageKey] || riskScenarios[40];
+
+                return {
+                    age, job: job.title, monthlyIncome, baseMonthlyExpense,
+                    totalAssets: netAssets, totalDebt: debt, habit: habit.type,
+                    risks: assignedRisks, retirementAge: job.style === 'professional' ? 68 : 60,
+                    investmentReturn: rand(2, 4) 
+                };
+            };
+
+            const runSimulation = () => {
+                if (!profile) return;
+                let currentAssets = profile.totalAssets;
+                let isBankrupt = false;
+                let bankruptAge = 100;
+                
+                let lifestyleMultiplier = 1.0;
+                if (lifestyle === 'basic') lifestyleMultiplier = 0.7;
+                if (lifestyle === 'rich') lifestyleMultiplier = 1.4;
+
+                let riskCost = 0;
+                profile.risks.forEach(r => { if (activeRisks[r.id]) riskCost += r.loss; });
+                currentAssets -= riskCost; 
+
+                for (let age = profile.age; age <= 100; age++) {
+                    let annualIncome = (age <= profile.retirementAge) 
+                        ? profile.monthlyIncome * 12 
+                        : Math.min(profile.monthlyIncome * 0.4, 180) * 12;
+
+                    let monthlyExpense = (profile.baseMonthlyExpense * lifestyleMultiplier) - savings;
+                    let minLivingCost = 85 + (age - 30) * 2.0; 
+                    if (age > profile.retirementAge) minLivingCost = 85 + (profile.retirementAge - 30) * 2.0 + (age - profile.retirementAge) * 1.0;
+                    if (monthlyExpense < minLivingCost) monthlyExpense = minLivingCost;
+
+                    let annualExpense = monthlyExpense * 12 * Math.pow(1.025, age - profile.age);
+                    
+                    let interestOrReturn = currentAssets >= 0 ? currentAssets * (profile.investmentReturn / 100) : currentAssets * 0.06;
+                    let netChange = annualIncome - annualExpense + interestOrReturn;
+                    currentAssets += netChange;
+
+                    if (currentAssets < 0) {
+                        if (age > profile.retirementAge || netChange < 0) {
+                           isBankrupt = true; bankruptAge = age; break;
+                        }
+                    }
+                }
+
+                const currentExpense = (profile.baseMonthlyExpense * lifestyleMultiplier) - savings;
+                const savingRate = Math.max(0, Math.round(((profile.monthlyIncome - currentExpense) / profile.monthlyIncome) * 100));
+                const effectiveDebt = profile.totalDebt + (riskCost > 0 ? riskCost : 0);
+                const monthlyInterest = (effectiveDebt * 0.05) / 12;
+                const dsr = Math.round((monthlyInterest / profile.monthlyIncome) * 100);
+                const liquidAssets = Math.max(0, currentAssets * 0.2);
+                const emergencyFundMonths = currentExpense > 0 ? (liquidAssets / currentExpense).toFixed(1) : 0;
+
+                setSimulationResult({ isBankrupt, bankruptAge, savingRate, dsr, emergencyFundMonths });
+            };
+
+            React.useEffect(() => { if (profile) runSimulation(); }, [profile, lifestyle, activeRisks, savings]);
+
+            const handleStart = () => {
+                setProfile(null); setSimulationResult(null); setActiveRisks({}); setSavings(0); setLifestyle('standard');
+                setScreen('loading'); setLoadingStep(0);
+                const steps = [
+                    () => setLoadingStep(1), () => setLoadingStep(2), () => setLoadingStep(3),
+                    () => { setLoadingStep(4); setProfile(generateProfile()); },
+                    () => setScreen('result')
+                ];
+                let delay = 0;
+                steps.forEach(step => { delay += 800; setTimeout(step, delay); });
+            };
+
+            const toggleRisk = (id) => setActiveRisks(prev => ({ ...prev, [id]: !prev[id] }));
+
+            const getStatusColor = (age) => {
+                if (age >= 100) return { text: '#29CC6A', bg: '#E6FCF0', label: '안전 상태' }; 
+                if (age >= 80) return { text: '#3182F6', bg: '#E8F3FF', label: '보통 상태' }; 
+                if (age >= 70) return { text: '#FF8D4D', bg: '#FFF4E6', label: '주의 필요' }; 
+                return { text: '#E94658', bg: '#FFF0F1', label: '위험 경고' }; 
+            };
+
+            // --- 렌더링 UI ---
+            return (
+                <div className="min-h-screen flex justify-center items-center font-sans overflow-hidden bg-[#F2F4F6] text-[#191F28]">
+                    <div className="w-full max-w-[400px] h-[100vh] max-h-[850px] bg-white relative shadow-xl flex flex-col overflow-y-auto hide-scrollbar">
+                        
+                        {/* INTRO */}
+                        {screen === 'intro' && (
+                            <div className="flex-1 flex flex-col justify-center text-center p-6 animate-fade-in">
+                                <div className="text-[60px] mb-8 animate-bounce">🪙⏳</div>
+                                <h1 className="text-[28px] font-extrabold leading-snug mb-3">당신의 돈은<br />언제 죽을까요?</h1>
+                                <p className="text-[#8B95A1] text-base mb-10">카드 내역과 위험 확률을 분석해<br />금융 수명을 예측해 드립니다.</p>
+                                <button onClick={handleStart} className="w-full py-[18px] rounded-[14px] bg-[#3182F6] text-white text-[17px] font-bold shadow-sm active:scale-98 transition-transform">내 데이터 불러오기</button>
+                            </div>
+                        )}
+
+                        {/* LOADING */}
+                        {screen === 'loading' && (
+                            <div className="flex-1 flex flex-col justify-center items-center bg-white/95 p-6 animate-fade-in">
+                                <div className="w-[50px] h-[50px] border-[5px] border-[#eee] border-t-[#3182F6] rounded-full animate-spin mb-8"></div>
+                                <div className="text-[18px] font-bold mb-2">서버 연결 중...</div>
+                                <div className="text-sm text-[#8B95A1] mb-8">잠시만 기다려주세요</div>
+                                <div className="w-[85%] space-y-3 text-left">
+                                    <LoadingItem step={1} current={loadingStep} icon={<Landmark size={16}/>} text="은행/계좌 잔액 조회" />
+                                    <LoadingItem step={2} current={loadingStep} icon={<CreditCard size={16}/>} text="카드 3년치 소비 패턴 분석" />
+                                    <LoadingItem step={3} current={loadingStep} icon={<Activity size={16}/>} text="건강검진 의료비 예측" />
+                                    <LoadingItem step={4} current={loadingStep} icon={<TrendingUp size={16}/>} text="리스크 모델링 중..." />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* RESULT */}
+                        {screen === 'result' && profile && simulationResult && (
+                            <div className="animate-fade-in pb-10">
+                                <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-50 pt-5 pb-4 border-b border-[#eee] shadow-[0_4px_10px_rgba(0,0,0,0.03)]">
+                                    <div className="px-6 text-center mb-5">
+                                        <div className="flex items-center justify-center gap-2 mb-2">
+                                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-[12px] font-bold">
+                                                <User size={12} /> 회원님 ({profile.age}세) · {profile.job}
+                                            </span>
+                                        </div>
+                                        <span className="inline-block px-3 py-1.5 rounded-full text-[13px] font-bold mb-3" style={{ backgroundColor: getStatusColor(simulationResult.bankruptAge).bg, color: getStatusColor(simulationResult.bankruptAge).text }}>
+                                            {getStatusColor(simulationResult.bankruptAge).label}
+                                        </span>
+                                        <div className="text-[26px] font-extrabold leading-[1.3]">
+                                            당신의 돈은<br />
+                                            <span style={{ color: getStatusColor(simulationResult.bankruptAge).text }}>
+                                                {simulationResult.isBankrupt ? `${simulationResult.bankruptAge}세` : '100세+'}
+                                            </span>에 사망합니다.
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-center gap-2 px-6 mb-5">
+                                        <TabButton active={lifestyle === 'basic'} onClick={() => setLifestyle('basic')}>기본 생활</TabButton>
+                                        <TabButton active={lifestyle === 'standard'} onClick={() => setLifestyle('standard')}>보통 생활</TabButton>
+                                        <TabButton active={lifestyle === 'rich'} onClick={() => setLifestyle('rich')}>여유 생활</TabButton>
+                                    </div>
+
+                                    <div className="px-6 mb-2">
+                                        <div className="flex justify-between text-[14px] font-semibold text-[#555] mb-2">
+                                            <span>💸 돈의 수명</span>
+                                            <span>{simulationResult.isBankrupt ? `${simulationResult.bankruptAge}세` : '100세+'}</span>
+                                        </div>
+                                        <div className="w-full h-4 bg-[#eee] rounded-full overflow-hidden relative">
+                                            <div className="h-full transition-all duration-500 ease-out" style={{ width: `${Math.min(100, simulationResult.bankruptAge)}%`, backgroundColor: getStatusColor(simulationResult.bankruptAge).text }}></div>
+                                        </div>
+                                        <p className="text-center text-[12px] text-[#888] mt-1">▲ 기대수명 100세 기준</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-2 px-6 mt-4">
+                                        <DiagItem label="저축률" value={`${simulationResult.savingRate}%`} status={simulationResult.savingRate > 30 ? "양호" : "부족"} color={simulationResult.savingRate > 30 ? "#29CC6A" : "#FF8D4D"} />
+                                        <DiagItem label="DSR(부채)" value={`${simulationResult.dsr}%`} status={simulationResult.dsr < 40 ? "양호" : "위험"} color={simulationResult.dsr < 40 ? "#29CC6A" : "#E94658"} />
+                                        <DiagItem label="비상금 여력" value={`${simulationResult.emergencyFundMonths}개월`} status={simulationResult.emergencyFundMonths > 3 ? "양호" : "위험"} color={simulationResult.emergencyFundMonths > 3 ? "#29CC6A" : "#E94658"} />
+                                    </div>
+                                </div>
+
+                                <div className="border-t-[8px] border-[#F2F4F6] p-6 mt-5">
+                                    <div className="flex items-center text-[18px] font-extrabold mb-4">
+                                        <AlertTriangle className="text-[#FF8D4D] mr-2" size={20} />
+                                        <span>{Math.floor(profile.age/10)*10}대 라이프 리스크</span>
+                                    </div>
+                                    <p className="text-[13px] text-[#666] mb-5">해당 연령대에 발생할 수 있는 주요 지출입니다.<br />스위치를 켜서 내 돈의 수명 변화를 확인하세요.</p>
+                                    {profile.risks.map((risk) => (
+                                        <div key={risk.id} className="bg-white border border-[#eee] rounded-[16px] p-5 mb-4 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+                                            <div className="inline-block bg-[#f5f5f5] text-[#8B95A1] text-[12px] px-2 py-1 rounded-md mb-2">⚠️ 위험도 {risk.prob}</div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-[16px] font-bold">{risk.title}</span>
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" className="sr-only peer" checked={!!activeRisks[risk.id]} onChange={() => toggleRisk(risk.id)} />
+                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF8D4D]"></div>
+                                                </label>
+                                            </div>
+                                            <div className="text-[13px] text-[#555] flex justify-between">
+                                                <span>{risk.desc}</span>
+                                                <b className="text-[#E94658]">-{formatMoney(risk.loss)}</b>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="border-t-[8px] border-[#F2F4F6] p-6 bg-[#F9FAFB]">
+                                    <div className="flex items-center text-[18px] font-extrabold mb-4 text-[#191F28]">
+                                        <Shield className="text-[#3182F6] mr-2" size={20} />
+                                        <span>솔루션 시뮬레이터</span>
+                                    </div>
+                                    <div className="bg-white rounded-[16px] p-5 border border-[#eee] shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
+                                        <div className="text-[16px] font-bold text-[#3182F6] mb-1">☕️ 월 지출을 줄인다면?</div>
+                                        <div className="py-4 relative">
+                                            <input type="range" min="0" max={Math.floor(profile.monthlyIncome * 0.25)} step="5" value={savings} onChange={(e) => setSavings(Number(e.target.value))} className="w-full h-2 bg-[#E5E8EB] rounded-lg appearance-none cursor-pointer accent-[#3182F6]" />
+                                        </div>
+                                        <div className="flex justify-between items-center mt-1">
+                                            <span className="text-[14px] text-[#555]">저축액</span>
+                                            <span className="text-[20px] font-extrabold text-[#3182F6]">{savings > 0 ? `+${savings}` : '0'}만원</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-5 text-center text-[14px] text-[#555]">
+                                        <span dangerouslySetInnerHTML={{ __html: simulationResult.bankruptAge >= 95 ? "훌륭합니다! <strong style='color:#29CC6A'>안정적인 노후</strong>가 예상됩니다." : `지금 상태는 <strong style='color:${getStatusColor(simulationResult.bankruptAge).text}'>주의</strong>가 필요합니다.` }}></span>
+                                    </div>
+                                    <button onClick={handleStart} className="w-full py-[18px] mt-5 rounded-[14px] bg-[#3182F6] text-white font-bold text-[17px] shadow-sm active:scale-98 transition-transform flex items-center justify-center gap-2">
+                                        <RefreshCw size={18} /> 솔루션 적용하기 (다시 분석)
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
+            );
+        };
 
-                <div style="margin-top:20px; font-size:14px; text-align:center; color:#555;">
-                    <span id="final-advice">지금 상태는 <strong>주의</strong>가 필요합니다.</span>
+        const LoadingItem = ({ step, current, icon, text }) => {
+            const isDone = current > step;
+            const isActive = current === step;
+            return (
+                <div className={`flex items-center gap-3 text-[14px] transition-all duration-300 ${isDone || isActive ? 'text-[#191F28] font-semibold' : 'text-[#aaa]'}`}>
+                    <div className={`w-6 flex justify-center text-center transition-all duration-300`}>
+                        {isDone ? <div className="text-[#3182F6]"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div> : <div className="opacity-50">{icon}</div>}
+                    </div>
+                    <span>{text}</span>
                 </div>
+            );
+        };
 
-                <button class="btn-main" onclick="alert('맞춤형 연금/보험 상품 페이지로 이동합니다.')">솔루션 적용하기</button>
+        const TabButton = ({ children, active, onClick }) => (
+            <button onClick={onClick} className={`px-3 py-2 rounded-[20px] text-[13px] font-semibold border transition-all ${active ? 'bg-[#191F28] text-white border-[#191F28]' : 'bg-white text-[#888] border-[#eee] hover:bg-gray-50'}`}>
+                {children}
+            </button>
+        );
+
+        const DiagItem = ({ label, value, status, color }) => (
+            <div className="bg-[#F9FAFB] p-[10px] rounded-[10px] text-center">
+                <div className="text-[11px] text-[#888] mb-1">{label}</div>
+                <div className="text-[14px] font-bold text-[#191F28]">{value}</div>
+                <div className="text-[10px] mt-[2px]" style={{ color: color }}>{status}</div>
             </div>
+        );
 
-        </div>
-
-    </div>
-
-    <script>
-        let currentLifestyle = 'standard';
-        let baseLife = 78;
-
-        function startProcess() {
-            document.getElementById('screen-intro').style.display = 'none';
-            document.getElementById('screen-loading').style.display = 'flex';
-
-            simulateConnectionStep(1, "은행 데이터 가져오는 중...", 800);
-            simulateConnectionStep(2, "카드 소비내역 분류 중...", 1600);
-            simulateConnectionStep(3, "미래 의료비 계산 중...", 2400);
-            simulateConnectionStep(4, "리스크 모델링 완료!", 3200);
-
-            setTimeout(() => {
-                document.getElementById('screen-loading').style.display = 'none';
-                document.getElementById('screen-result').style.display = 'block';
-                updateAll();
-            }, 4000);
-        }
-
-        function simulateConnectionStep(stepNum, text, time) {
-            setTimeout(() => {
-                document.getElementById('load-msg').innerText = text;
-                const item = document.getElementById('step' + stepNum);
-                item.classList.add('active');
-                item.classList.add('done');
-            }, time);
-        }
-
-        // New Feature: Lifestyle Selection
-        function setLifestyle(type) {
-            currentLifestyle = type;
-            
-            // Reset active tabs
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('tab-' + type).classList.add('active');
-
-            // Change base life based on spending level
-            if(type === 'basic') baseLife = 85; // Less spending -> Longer money life
-            else if(type === 'standard') baseLife = 78;
-            else if(type === 'rich') baseLife = 65; // High spending -> Shorter money life
-            
-            updateAll();
-        }
-
-        function updateAll() {
-            const isMedicalRisk = document.getElementById('risk-medical').checked;
-            const isJobRisk = document.getElementById('risk-job').checked;
-            const savingAmount = parseInt(document.getElementById('saving-slider').value);
-
-            document.getElementById('saving-text').innerText = "-" + savingAmount + "만원";
-
-            let finalLife = baseLife; // Use variable baseLife
-            let riskPenalty = 0;
-            if (isMedicalRisk) riskPenalty += 7;
-            if (isJobRisk) riskPenalty += 3;
-            
-            finalLife -= riskPenalty;
-
-            let savingBonus = Math.floor(savingAmount / 5);
-            finalLife += savingBonus;
-
-            if (finalLife > 100) finalLife = 100;
-
-            const ageDisplay = document.getElementById('age-display');
-            const barText = document.getElementById('bar-text');
-            const moneyBar = document.getElementById('money-bar');
-            const badge = document.getElementById('badge-text');
-            const advice = document.getElementById('final-advice');
-
-            ageDisplay.innerText = finalLife + "세";
-            barText.innerText = finalLife + "세";
-            moneyBar.style.width = finalLife + "%";
-
-            if (finalLife >= 95) {
-                badge.innerText = "안전 상태";
-                badge.style.background = "#E6FCF0";
-                badge.style.color = "var(--green)";
-                ageDisplay.className = "highlight-green";
-                moneyBar.style.background = "var(--green)";
-                advice.innerHTML = "훌륭합니다! <strong style='color:var(--green)'>안정적인 노후</strong>가 예상됩니다.";
-            } else if (riskPenalty > 0 && savingBonus < riskPenalty) {
-                badge.innerText = "위험 경고";
-                badge.style.background = "#FFF4E6";
-                badge.style.color = "var(--orange)";
-                ageDisplay.className = "highlight-orange";
-                moneyBar.style.background = "var(--orange)";
-                advice.innerHTML = "리스크가 큽니다. <strong style='color:var(--orange)'>더 많은 저축</strong>이나 대비가 필요합니다.";
-            } else {
-                badge.innerText = "주의 필요";
-                badge.style.background = "#FFF0F1";
-                badge.style.color = "var(--red)";
-                ageDisplay.className = "highlight-red";
-                moneyBar.style.background = "var(--red)";
-                advice.innerHTML = "현재 추세라면 <strong style='color:var(--red)'>노후 자금이 부족</strong>합니다.";
-            }
-        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LifePortSimulator />);
     </script>
 </body>
 </html>
