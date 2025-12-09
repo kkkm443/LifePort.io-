@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifePort - 금융 수명 예측</title>
+    <title>LifePort</title>
     
     <!-- React & ReactDOM (CDN) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -23,13 +23,30 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        
+        /* 슬라이더 썸(핸들) 스타일 커스텀 */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #3182F6;
+            box-shadow: 0 2px 6px rgba(49, 130, 246, 0.4);
+            margin-top: -8px; /* 트랙 중앙 정렬 */
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body class="bg-[#F2F4F6]">
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- 아이콘 컴포넌트 (Lucide 아이콘을 SVG로 직접 구현) ---
+        // --- 아이콘 컴포넌트 ---
         const IconBase = ({ size = 24, color = "currentColor", children, ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
                 {children}
@@ -108,13 +125,31 @@
                 const habit = spendingHabits[rand(0, spendingHabits.length - 1)];
                 
                 let monthlyIncome = rand(job.minIncome, job.maxIncome);
-                if (age > 35 && job.style !== 'beginner') monthlyIncome += rand(50, 150);
+                
+                // [수정] 35세 이상 소득 보정: 직업 안정성에 따라 차등 적용
+                // 불안정 직군(volatile, high-risk)은 나이 들어도 소득 상승폭을 제한함
+                if (age > 35 && job.style !== 'beginner') {
+                    if (job.style === 'volatile' || job.style === 'high-risk') {
+                        monthlyIncome += rand(20, 80); // 프리랜서/스타트업은 상승폭 작게
+                    } else {
+                        monthlyIncome += rand(50, 150); // 대기업/전문직은 상승폭 크게
+                    }
+                }
                 
                 const baseMonthlyExpense = Math.floor(monthlyIncome * habit.ratio);
                 const yearsWorked = Math.max(0, age - 26);
                 const annualSaving = (monthlyIncome - baseMonthlyExpense) * 12;
                 
-                let totalAssets = Math.floor(annualSaving * yearsWorked * rand(6, 9) / 10) + rand(200, 1500); 
+                // [수정] 자산 축적 안정성 계수 (Stability Factor) 도입
+                // 프리랜서(volatile)나 사업(high-risk)은 공백기가 있어 자산 축적 효율이 낮음 (0.7 ~ 0.8배)
+                let stabilityFactor = 1.0;
+                if (job.style === 'volatile') stabilityFactor = 0.75; // 프리랜서: 공백기 반영
+                if (job.style === 'high-risk') stabilityFactor = 0.7; // 사업: 투자비용 반영
+                if (job.style === 'professional') stabilityFactor = 1.1; // 전문직: 보너스 등 반영
+
+                // 기존 로직에 stabilityFactor 곱하기
+                let totalAssets = Math.floor(annualSaving * yearsWorked * stabilityFactor * rand(4, 7) / 10) + rand(100, 1000); 
+                
                 let debt = Math.floor(totalAssets * (rand(10, 50) / 100));
                 let netAssets = Math.floor(totalAssets - debt);
 
@@ -127,7 +162,7 @@
                     age, job: job.title, monthlyIncome, baseMonthlyExpense,
                     totalAssets: netAssets, totalDebt: debt, habit: habit.type,
                     risks: assignedRisks, retirementAge: job.style === 'professional' ? 68 : 60,
-                    investmentReturn: rand(2, 4) 
+                    investmentReturn: rand(10, 35) / 10 
                 };
             };
 
@@ -151,11 +186,12 @@
                         : Math.min(profile.monthlyIncome * 0.4, 180) * 12;
 
                     let monthlyExpense = (profile.baseMonthlyExpense * lifestyleMultiplier) - savings;
+                    
                     let minLivingCost = 85 + (age - 30) * 2.0; 
                     if (age > profile.retirementAge) minLivingCost = 85 + (profile.retirementAge - 30) * 2.0 + (age - profile.retirementAge) * 1.0;
                     if (monthlyExpense < minLivingCost) monthlyExpense = minLivingCost;
 
-                    let annualExpense = monthlyExpense * 12 * Math.pow(1.025, age - profile.age);
+                    let annualExpense = monthlyExpense * 12 * Math.pow(1.03, age - profile.age);
                     
                     let interestOrReturn = currentAssets >= 0 ? currentAssets * (profile.investmentReturn / 100) : currentAssets * 0.06;
                     let netChange = annualIncome - annualExpense + interestOrReturn;
@@ -201,6 +237,8 @@
                 if (age >= 70) return { text: '#FF8D4D', bg: '#FFF4E6', label: '주의 필요' }; 
                 return { text: '#E94658', bg: '#FFF0F1', label: '위험 경고' }; 
             };
+
+            const maxSavings = 200;
 
             // --- 렌더링 UI ---
             return (
@@ -309,7 +347,18 @@
                                     <div className="bg-white rounded-[16px] p-5 border border-[#eee] shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
                                         <div className="text-[16px] font-bold text-[#3182F6] mb-1">☕️ 월 지출을 줄인다면?</div>
                                         <div className="py-4 relative">
-                                            <input type="range" min="0" max={Math.floor(profile.monthlyIncome * 0.25)} step="5" value={savings} onChange={(e) => setSavings(Number(e.target.value))} className="w-full h-2 bg-[#E5E8EB] rounded-lg appearance-none cursor-pointer accent-[#3182F6]" />
+                                            <input 
+                                                type="range" 
+                                                min="0" 
+                                                max={maxSavings} 
+                                                step="5" 
+                                                value={savings} 
+                                                onChange={(e) => setSavings(Number(e.target.value))} 
+                                                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                style={{
+                                                    background: `linear-gradient(to right, #3182F6 0%, #3182F6 ${(savings / maxSavings) * 100}%, #E5E8EB ${(savings / maxSavings) * 100}%, #E5E8EB 100%)`
+                                                }}
+                                            />
                                         </div>
                                         <div className="flex justify-between items-center mt-1">
                                             <span className="text-[14px] text-[#555]">저축액</span>
