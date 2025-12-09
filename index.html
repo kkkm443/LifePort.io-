@@ -63,7 +63,7 @@
         /* --- SCREEN 3: RESULT --- */
         #screen-result { display: none; padding-bottom: 40px; }
 
-        /* 상단 고정 영역 (Sticky Header) */
+        /* Sticky Header */
         .sticky-wrapper {
             position: sticky;
             top: 0;
@@ -75,7 +75,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
 
-        /* Header & Graph */
+        /* Result Header */
         .result-header { text-align: center; margin-bottom: 20px; padding: 0 24px;}
         .result-badge { 
             background: #FFF0F1; color: var(--red); padding: 6px 12px; border-radius: 20px; 
@@ -86,6 +86,17 @@
         .highlight-orange { color: var(--orange); }
         .highlight-green { color: var(--green); }
 
+        /* Lifestyle Tabs (New Feature) */
+        .lifestyle-tabs {
+            display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; padding: 0 24px;
+        }
+        .tab-btn {
+            padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            border: 1px solid #eee; background: #fff; color: #888; cursor: pointer; transition: 0.2s;
+        }
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* Graph */
         .graph-box { margin-bottom: 5px; padding: 0 24px; }
         .graph-row { margin-bottom: 10px; }
         .graph-label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555; }
@@ -94,8 +105,17 @@
         .fill-life { width: 100%; background: #ddd; }
         .fill-money { width: 0%; background: var(--red); }
 
+        /* Diagnosis Details (New Feature) */
+        .diagnosis-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 24px; margin-top: 15px;
+        }
+        .diag-item { background: #F9FAFB; padding: 10px; border-radius: 10px; text-align: center; }
+        .diag-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+        .diag-value { font-size: 14px; font-weight: 700; color: var(--primary); }
+        .diag-status { font-size: 10px; margin-top: 2px; }
+
         /* Risk Section */
-        .risk-section { border-top: 8px solid #F2F4F6; padding: 24px; margin-top: 0; }
+        .risk-section { border-top: 8px solid #F2F4F6; padding: 24px; margin-top: 20px; }
         .section-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; }
         .section-title i { color: var(--orange); margin-right: 8px; }
         
@@ -122,35 +142,31 @@
         
         .range-wrap { position: relative; padding: 15px 0; }
         
-        /* [수정 완료] 슬라이더 스타일 & 터치 설정 복구 */
         input[type=range] { 
             width: 100%; 
             accent-color: var(--blue);
             cursor: pointer;
-            touch-action: none; /* 드래그 시 스크롤 막기 */
-            -webkit-appearance: none; /* 기본 스타일 제거 */
+            touch-action: none;
+            -webkit-appearance: none;
             background: transparent;
         }
         
-        /* 트랙 스타일 */
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 6px; background: #E5E8EB; border-radius: 3px;
         }
 
-        /* 손잡이(파란 동그라미) 디자인 복구 */
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 28px; width: 28px; /* 터치하기 좋게 살짝 키움 */
+            height: 28px; width: 28px;
             border-radius: 50%;
-            background: var(--blue); /* 파란색 복구 */
-            margin-top: -11px; /* 트랙 중앙 정렬 */
-            box-shadow: 0 2px 6px rgba(49, 130, 246, 0.4); /* 그림자 복구 */
+            background: var(--blue);
+            margin-top: -11px;
+            box-shadow: 0 2px 6px rgba(49, 130, 246, 0.4);
         }
         
         .save-display { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .save-amount { font-size: 20px; font-weight: 800; color: var(--blue); }
 
-        /* Buttons & Animations */
         .btn-main {
             width: 100%; padding: 18px; border-radius: 14px; border: none;
             background-color: var(--blue); color: white; font-size: 17px; font-weight: 700;
@@ -199,6 +215,14 @@
                     </div>
                 </div>
 
+                <!-- Lifestyle Tabs (New) -->
+                <div class="lifestyle-tabs">
+                    <button class="tab-btn" onclick="setLifestyle('basic')" id="tab-basic">기본 생활</button>
+                    <button class="tab-btn active" onclick="setLifestyle('standard')" id="tab-standard">보통 생활</button>
+                    <button class="tab-btn" onclick="setLifestyle('rich')" id="tab-rich">여유 생활</button>
+                </div>
+
+                <!-- Graph -->
                 <div class="graph-box">
                     <div class="graph-row">
                         <div class="graph-label"><span>💸 돈의 수명</span><span id="bar-text">78세</span></div>
@@ -206,7 +230,26 @@
                             <div class="bar-fill fill-money" id="money-bar" style="width: 78%;"></div>
                         </div>
                     </div>
-                    <p style="text-align: center; color: #888; font-size: 13px; margin: 5px 0 0 0;">▲ 신체수명 100세 기준</p>
+                    <p style="text-align: center; color: #888; font-size: 12px; margin: 5px 0 0 0;">▲ 기대수명 100세 기준</p>
+                </div>
+
+                <!-- Diagnosis Details (New) -->
+                <div class="diagnosis-grid">
+                    <div class="diag-item">
+                        <div class="diag-label">저축률</div>
+                        <div class="diag-value" style="color:var(--orange)">12%</div>
+                        <div class="diag-status" style="color:var(--orange)">부족</div>
+                    </div>
+                    <div class="diag-item">
+                        <div class="diag-label">DSR(부채)</div>
+                        <div class="diag-value" style="color:var(--green)">25%</div>
+                        <div class="diag-status" style="color:var(--green)">양호</div>
+                    </div>
+                    <div class="diag-item">
+                        <div class="diag-label">비상금 여력</div>
+                        <div class="diag-value" style="color:var(--red)">0.8개월</div>
+                        <div class="diag-status" style="color:var(--red)">위험</div>
+                    </div>
                 </div>
             </div>
 
@@ -220,7 +263,6 @@
                     "만약 이런 일이 생긴다면?"<br>스위치를 켜서 충격을 확인하세요.
                 </p>
 
-                <!-- Risk 1 -->
                 <div class="risk-card">
                     <div class="risk-prob">⚠️ 위험도 24% 높음</div>
                     <div class="risk-header">
@@ -233,7 +275,6 @@
                     <div style="font-size:13px; color:#555;">예상 치료비 <b style="color:var(--red)">-6,000만원</b></div>
                 </div>
 
-                <!-- Risk 2 -->
                 <div class="risk-card">
                     <div class="risk-prob">⚡️ 발생 확률 15%</div>
                     <div class="risk-header">
@@ -256,7 +297,6 @@
                 <div class="sim-card">
                     <div class="sim-title">☕️ 월 지출을 줄인다면?</div>
                     <div class="range-wrap">
-                        <!-- 복구된 파란 동그라미 슬라이더 -->
                         <input type="range" id="saving-slider" min="0" max="100" value="0" step="1" oninput="updateAll()">
                     </div>
                     <div class="save-display">
@@ -277,7 +317,8 @@
     </div>
 
     <script>
-        const initialLife = 78;
+        let currentLifestyle = 'standard';
+        let baseLife = 78;
 
         function startProcess() {
             document.getElementById('screen-intro').style.display = 'none';
@@ -304,6 +345,22 @@
             }, time);
         }
 
+        // New Feature: Lifestyle Selection
+        function setLifestyle(type) {
+            currentLifestyle = type;
+            
+            // Reset active tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + type).classList.add('active');
+
+            // Change base life based on spending level
+            if(type === 'basic') baseLife = 85; // Less spending -> Longer money life
+            else if(type === 'standard') baseLife = 78;
+            else if(type === 'rich') baseLife = 65; // High spending -> Shorter money life
+            
+            updateAll();
+        }
+
         function updateAll() {
             const isMedicalRisk = document.getElementById('risk-medical').checked;
             const isJobRisk = document.getElementById('risk-job').checked;
@@ -311,7 +368,7 @@
 
             document.getElementById('saving-text').innerText = "-" + savingAmount + "만원";
 
-            let finalLife = initialLife;
+            let finalLife = baseLife; // Use variable baseLife
             let riskPenalty = 0;
             if (isMedicalRisk) riskPenalty += 7;
             if (isJobRisk) riskPenalty += 3;
