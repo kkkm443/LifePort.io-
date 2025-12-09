@@ -74,15 +74,15 @@
             const [activeRisks, setActiveRisks] = React.useState({}); 
             const [savings, setSavings] = React.useState(0); 
 
-            // 데이터 정의
+            // 데이터 정의 (밸런스 조정)
             const jobs = [
-                { title: '대기업 대리', minIncome: 350, maxIncome: 550, style: 'stable' },
-                { title: '프리랜서 개발자', minIncome: 300, maxIncome: 800, style: 'volatile' },
+                { title: '대기업 대리', minIncome: 380, maxIncome: 620, style: 'stable' },
+                { title: '프리랜서 개발자', minIncome: 400, maxIncome: 900, style: 'volatile' },
                 { title: '9급 공무원', minIncome: 200, maxIncome: 280, style: 'stable' },
-                { title: '스타트업 대표', minIncome: 200, maxIncome: 1200, style: 'high-risk' },
+                { title: '스타트업 대표', minIncome: 200, maxIncome: 1000, style: 'high-risk' },
                 { title: '편의점 점주', minIncome: 250, maxIncome: 450, style: 'business' },
-                { title: '전문직 (약사)', minIncome: 600, maxIncome: 1000, style: 'professional' },
-                { title: '중소기업 사원', minIncome: 230, maxIncome: 340, style: 'average' },
+                { title: '전문직 (약사)', minIncome: 700, maxIncome: 1300, style: 'professional' },
+                { title: '중소기업 사원', minIncome: 230, maxIncome: 350, style: 'average' },
             ];
 
             const spendingHabits = [
@@ -126,31 +126,48 @@
                 
                 let monthlyIncome = rand(job.minIncome, job.maxIncome);
                 
-                // [수정] 35세 이상 소득 보정: 직업 안정성에 따라 차등 적용
-                // 불안정 직군(volatile, high-risk)은 나이 들어도 소득 상승폭을 제한함
+                // 경력직 소득 보정
                 if (age > 35 && job.style !== 'beginner') {
                     if (job.style === 'volatile' || job.style === 'high-risk') {
-                        monthlyIncome += rand(20, 80); // 프리랜서/스타트업은 상승폭 작게
+                        monthlyIncome += rand(10, 60); 
+                    } else if (job.style === 'professional') {
+                        monthlyIncome += rand(80, 200); 
                     } else {
-                        monthlyIncome += rand(50, 150); // 대기업/전문직은 상승폭 크게
+                        monthlyIncome += rand(50, 120); 
                     }
                 }
                 
                 const baseMonthlyExpense = Math.floor(monthlyIncome * habit.ratio);
-                const yearsWorked = Math.max(0, age - 26);
+                const startWorkingAge = (job.style === 'professional') ? 29 : 26; 
+                const yearsWorked = Math.max(0, age - startWorkingAge);
                 const annualSaving = (monthlyIncome - baseMonthlyExpense) * 12;
                 
-                // [수정] 자산 축적 안정성 계수 (Stability Factor) 도입
-                // 프리랜서(volatile)나 사업(high-risk)은 공백기가 있어 자산 축적 효율이 낮음 (0.7 ~ 0.8배)
-                let stabilityFactor = 1.0;
-                if (job.style === 'volatile') stabilityFactor = 0.75; // 프리랜서: 공백기 반영
-                if (job.style === 'high-risk') stabilityFactor = 0.7; // 사업: 투자비용 반영
-                if (job.style === 'professional') stabilityFactor = 1.1; // 전문직: 보너스 등 반영
+                // 직업별 자산 축적 효율
+                let stabilityFactor = 1.0; 
+                let assetRatio = rand(4, 7); 
 
-                // 기존 로직에 stabilityFactor 곱하기
-                let totalAssets = Math.floor(annualSaving * yearsWorked * stabilityFactor * rand(4, 7) / 10) + rand(100, 1000); 
+                if (job.style === 'volatile') {
+                    stabilityFactor = 0.7; 
+                } else if (job.style === 'high-risk') {
+                    stabilityFactor = 0.65; 
+                } else if (job.style === 'professional') {
+                    stabilityFactor = 1.2; 
+                    assetRatio = rand(6, 8); 
+                } else if (job.style === 'stable') {
+                    stabilityFactor = 1.05;
+                    assetRatio = rand(5, 7);
+                }
+
+                // 초기 자산 베이스
+                let baseInit = (job.style === 'professional') ? rand(500, 2500) : rand(100, 1200);
+
+                let totalAssets = Math.floor(annualSaving * yearsWorked * stabilityFactor * assetRatio / 10) + baseInit; 
                 
-                let debt = Math.floor(totalAssets * (rand(10, 50) / 100));
+                // 부채 비율
+                let debtRatio = rand(10, 50);
+                if (job.style === 'professional') debtRatio = rand(10, 40); 
+
+                let debt = Math.floor(totalAssets * (debtRatio / 100));
                 let netAssets = Math.floor(totalAssets - debt);
 
                 let ageKey = Math.floor(age / 10) * 10;
@@ -162,7 +179,8 @@
                     age, job: job.title, monthlyIncome, baseMonthlyExpense,
                     totalAssets: netAssets, totalDebt: debt, habit: habit.type,
                     risks: assignedRisks, retirementAge: job.style === 'professional' ? 68 : 60,
-                    investmentReturn: rand(10, 35) / 10 
+                    // 투자 수익률: 2.0% ~ 5.5%
+                    investmentReturn: rand(20, 55) / 10 
                 };
             };
 
@@ -173,32 +191,55 @@
                 let bankruptAge = 100;
                 
                 let lifestyleMultiplier = 1.0;
-                if (lifestyle === 'basic') lifestyleMultiplier = 0.7;
-                if (lifestyle === 'rich') lifestyleMultiplier = 1.4;
+                if (lifestyle === 'basic') lifestyleMultiplier = 0.75; 
+                if (lifestyle === 'rich') lifestyleMultiplier = 1.4; 
 
                 let riskCost = 0;
                 profile.risks.forEach(r => { if (activeRisks[r.id]) riskCost += r.loss; });
                 currentAssets -= riskCost; 
 
                 for (let age = profile.age; age <= 100; age++) {
-                    let annualIncome = (age <= profile.retirementAge) 
-                        ? profile.monthlyIncome * 12 
-                        : Math.min(profile.monthlyIncome * 0.4, 180) * 12;
+                    let annualIncome = 0;
+                    if (age <= profile.retirementAge) {
+                        annualIncome = profile.monthlyIncome * 12;
+                    } else {
+                        // 국민연금 (상한선 180)
+                        let pension = Math.min(profile.monthlyIncome * 0.4, 180); 
+                        annualIncome = pension * 12;
+                    }
 
                     let monthlyExpense = (profile.baseMonthlyExpense * lifestyleMultiplier) - savings;
                     
-                    let minLivingCost = 85 + (age - 30) * 2.0; 
-                    if (age > profile.retirementAge) minLivingCost = 85 + (profile.retirementAge - 30) * 2.0 + (age - profile.retirementAge) * 1.0;
+                    // [수정] 최저 생계비 하한선 대폭 완화
+                    // 기존: 90 + (age-30)*2.2 (약 180~200만원) -> 고정되는 원인
+                    // 변경: 60 + (age-30)*1.0 (약 100~130만원 수준) -> 슬라이더 효과 극대화
+                    let minLivingCost = 60 + (age - 30) * 1.0; 
+                    if (age > profile.retirementAge) {
+                        minLivingCost = 60 + (profile.retirementAge - 30) * 1.0 + (age - profile.retirementAge) * 0.5;
+                    }
+                    // 아무리 아껴도 최소 60만원은 쓴다고 가정 (슬라이더가 작동할 여유 공간 확보)
+                    if (minLivingCost < 60) minLivingCost = 60;
+
                     if (monthlyExpense < minLivingCost) monthlyExpense = minLivingCost;
 
+                    // 물가 상승률 3.0%
                     let annualExpense = monthlyExpense * 12 * Math.pow(1.03, age - profile.age);
                     
-                    let interestOrReturn = currentAssets >= 0 ? currentAssets * (profile.investmentReturn / 100) : currentAssets * 0.06;
+                    let interestOrReturn = 0;
+                    if (currentAssets >= 0) {
+                        interestOrReturn = currentAssets * (profile.investmentReturn / 100);
+                    } else {
+                        interestOrReturn = currentAssets * 0.06; // 대출 이자 6%
+                    }
+
                     let netChange = annualIncome - annualExpense + interestOrReturn;
                     currentAssets += netChange;
 
                     if (currentAssets < 0) {
-                        if (age > profile.retirementAge || netChange < 0) {
+                        if (age > profile.retirementAge) {
+                           isBankrupt = true; bankruptAge = age; break;
+                        }
+                        if (netChange < 0) {
                            isBankrupt = true; bankruptAge = age; break;
                         }
                     }
@@ -238,6 +279,7 @@
                 return { text: '#E94658', bg: '#FFF0F1', label: '위험 경고' }; 
             };
 
+            // 저축 한도: 최대 200만원 고정
             const maxSavings = 200;
 
             // --- 렌더링 UI ---
